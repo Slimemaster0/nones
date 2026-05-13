@@ -8,7 +8,7 @@ struct binArray readFileBinary(char *path) {
     FILE *fptr = fopen(path, "rb");
 
     if (fptr == NULL) {
-	struct binArray ret = { NULL, 0 };
+	struct binArray ret = { NULL, -1 };
 	return ret;
     }
 
