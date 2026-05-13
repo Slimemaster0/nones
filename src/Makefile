@@ -1,0 +1,2 @@
+output:
+	$(MAKE) -C .. $(MAKECMDGOALS)
