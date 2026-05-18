@@ -1131,8 +1131,286 @@ jmp:
     cpu->instructionCycle--;
     return;
 
+stx:
+    cpu->currentInstruction = STX;
+    cpu->instructionCycle = 1;
+    cpuWrite(getAddr(addressingMode, cpu, ram, rom), ram, cpu->regX);
+
+    cpu->instructionCycle--;
+    prgCountInc(cpu, addressingMode);
+    return;
+
+bpl:
+    cpu->currentInstruction = BPL;
+    cpu->instructionCycle = 1;
+
+    if (cpu->statusNegative == false) {
+	branch(cpu, ram, rom);
+    } else {
+	prgCountInc(cpu, IMMEDIATE);
+    }
+
+    cpu->instructionCycle--;
+    return;
+
+bmi:
+    cpu->currentInstruction = BMI;
+    cpu->instructionCycle = 1;
+
+    if (cpu->statusNegative == true) {
+	branch(cpu, ram, rom);
+    } else {
+	prgCountInc(cpu, IMMEDIATE);
+    }
+
+    cpu->instructionCycle--;
+    return;
+
+bvc:
+    cpu->currentInstruction = BVC;
+    cpu->instructionCycle = 1;
+
+    if (cpu->statusOverflow == false) {
+	branch(cpu, ram, rom);
+    } else {
+	prgCountInc(cpu, IMMEDIATE);
+    }
+
+    cpu->instructionCycle--;
+    return;
+
+bvs:
+    cpu->currentInstruction = BVS;
+    cpu->instructionCycle = 1;
+
+    if (cpu->statusOverflow == true) {
+	branch(cpu, ram, rom);
+    } else {
+	prgCountInc(cpu, IMMEDIATE);
+    }
+
+    cpu->instructionCycle--;
+    return;
+
+bcc:
+    cpu->currentInstruction = BCC;
+    cpu->instructionCycle = 1;
+
+    if (cpu->statusCarry == false) {
+	branch(cpu, ram, rom);
+    } else {
+	prgCountInc(cpu, IMMEDIATE);
+    }
+
+    cpu->instructionCycle--;
+    return;
+
+bcs:
+    cpu->currentInstruction = BCS;
+    cpu->instructionCycle = 1;
+
+    if (cpu->statusCarry == true) {
+	branch(cpu, ram, rom);
+    } else {
+	prgCountInc(cpu, IMMEDIATE);
+    }
+
+    cpu->instructionCycle--;
+    return;
+
+bne:
+    cpu->currentInstruction = BNE;
+    cpu->instructionCycle = 1;
+
+    if (cpu->statusZero == false) {
+	branch(cpu, ram, rom);
+    } else {
+	prgCountInc(cpu, IMMEDIATE);
+    }
+
+    cpu->instructionCycle--;
+    return;
+
+beq:
+    cpu->currentInstruction = BEQ;
+    cpu->instructionCycle = 1;
+
+    if (cpu->statusZero == true) {
+	branch(cpu, ram, rom);
+    } else {
+	prgCountInc(cpu, IMMEDIATE);
+    }
+
+    cpu->instructionCycle--;
+    return;
+
+ahx:
+    cpu->currentInstruction = AHX;
+    
+    arg = parseArgs(IMMEDIATE, cpu, ram, rom) +1;
+    cpu->instructionCycle = 1;
+
+    cpuWrite(getAddr(addressingMode, cpu, ram, rom), ram, cpu->regA & cpu->regX & arg);
+    
+
+    prgCountInc(cpu, addressingMode);
+    cpu->instructionCycle--;
+    return;
+
+clc:
+    cpu->currentInstruction = CLC;
+    cpu->instructionCycle = 2;
+
+    cpu->statusCarry = false;
+
+    prgCountInc(cpu, addressingMode);
+    cpu->instructionCycle--;
+    return;
+
+sec:
+    cpu->currentInstruction = SEC;
+    cpu->instructionCycle = 2;
+
+    cpu->statusCarry = true;
+
+    prgCountInc(cpu, addressingMode);
+    cpu->instructionCycle--;
+    return;
+
+cli:
+    cpu->currentInstruction = CLI;
+    cpu->instructionCycle = 2;
+
+    cpu->statusInterruptDisable = false;
+
+    prgCountInc(cpu, addressingMode);
+    cpu->instructionCycle--;
+    return;
+
+sei:
+    cpu->currentInstruction = SEI;
+    cpu->instructionCycle = 2;
+
+    cpu->statusInterruptDisable = true;
+
+    prgCountInc(cpu, addressingMode);
+    cpu->instructionCycle--;
+    return;
+
+clv:
+    cpu->currentInstruction = CLV;
+    cpu->instructionCycle = 2;
+
+    cpu->statusOverflow= false;
+
+    prgCountInc(cpu, addressingMode);
+    cpu->instructionCycle--;
+    return;
+
+cld:
+    cpu->currentInstruction = CLD;
+    cpu->instructionCycle = 2;
+
+    cpu->statusDecimal = false;
+
+    prgCountInc(cpu, addressingMode);
+    cpu->instructionCycle--;
+    return;
+
+sed:
+    cpu->currentInstruction = SED;
+    cpu->instructionCycle = 2;
+
+    cpu->statusDecimal = true;
+
+    prgCountInc(cpu, addressingMode);
+    cpu->instructionCycle--;
+    return;
+
+tya:
+    cpu->currentInstruction = TAY;
+    cpu->instructionCycle = 2;
+
+    cpu->regA = cpu->regY;
+
+    prgCountInc(cpu, addressingMode);
+    cpu->instructionCycle--;
+    return;
+
+txs:
+    cpu->currentInstruction = TXS;
+    cpu->instructionCycle = 2;
+
+    cpu->stackPointer = cpu->regX;
+    
+    prgCountInc(cpu, addressingMode);
+    cpu->instructionCycle--;
+    return;
+
+tsx:
+    cpu->currentInstruction = TSX;
+    cpu->instructionCycle = 2;
+
+    cpu->regX = cpu->stackPointer;
+    
+    prgCountInc(cpu, addressingMode);
+    cpu->instructionCycle--;
+    return;
+
+tas:
+    cpu->currentInstruction = TAS;
+    
+    arg = parseArgs(IMMEDIATE, cpu, ram, rom) +1;
+    cpu->instructionCycle = 1;
+
+    cpu->stackPointer = cpu->regA & cpu->regX;
+    cpuWrite(getAddr(addressingMode, cpu, ram, rom), ram, cpu->regA & cpu->regX & arg);
+
+    prgCountInc(cpu, addressingMode);
+    cpu->instructionCycle--;
+    return;
+
+shy:
+    cpu->currentInstruction = SHY;
+    
+    arg = parseArgs(IMMEDIATE, cpu, ram, rom) +1;
+    cpu->instructionCycle = 1;
+
+    cpuWrite(getAddr(addressingMode, cpu, ram, rom), ram, cpu->regY & arg);
+
+    prgCountInc(cpu, addressingMode);
+    cpu->instructionCycle--;
+    return;
+
+shx:
+    cpu->currentInstruction = SHX;
+    
+    arg = parseArgs(IMMEDIATE, cpu, ram, rom) +1;
+    cpu->instructionCycle = 1;
+
+    cpuWrite(getAddr(addressingMode, cpu, ram, rom), ram, cpu->regX & arg);
+
+    prgCountInc(cpu, addressingMode);
+    cpu->instructionCycle--;
+    return;
+
+las:
+    cpu->currentInstruction = LAS;
+    cpu->instructionCycle = 1;
+
+    arg = parseArgs(addressingMode, cpu, ram, rom);
+    result = arg & cpu->stackPointer;
+
+    cpu->regA = result;
+    cpu->regX = result;
+    cpu->stackPointer = result;
+
+    updateZN(cpu, result);
 
 
+    prgCountInc(cpu, addressingMode);
+    cpu->instructionCycle--;
+    return;
 
     // }}}
 }
