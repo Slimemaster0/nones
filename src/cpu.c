@@ -281,6 +281,19 @@ void prgCountInc(struct CPU *cpu, enum AddressingMode addressingMode) {
     }
 }
 
+void updateZN(struct CPU *cpu, const unsigned char value) {
+    if (value == 0) {
+	cpu->statusZero = true;
+    } else {
+	cpu->statusZero = false;
+    }
+    if (value >= 0x80) {
+	cpu->statusNegative = true;
+    } else {
+	cpu->statusNegative = false;
+    }
+}
+
 void cpuTick(struct CPU *cpu, unsigned char *ram, const char *rom) {
     enum AddressingMode addressingMode = 0;
     if (cpu->instructionCycle == 0) {
@@ -403,16 +416,7 @@ ora:
     cpu->instructionCycle = 1;
     cpu->regA = cpu->regA | parseArgs(addressingMode, cpu, ram, rom);
 
-    if (cpu->regA == 0) {
-	cpu->statusZero = true;
-    } else {
-	cpu->statusNegative = false;
-    }
-    if (cpu->regA >= 0x80) {
-	cpu->statusNegative = true;
-    } else {
-	cpu->statusNegative = false;
-    }
+    updateZN(cpu, cpu->regA);
 
     cpu->instructionCycle--;
 
@@ -421,16 +425,7 @@ eor:
     cpu->instructionCycle = 1;
     cpu->regA = cpu->regA ^ parseArgs(addressingMode, cpu, ram, rom);
 
-    if (cpu->regA == 0) {
-	cpu->statusZero = true;
-    } else {
-	cpu->statusNegative = false;
-    }
-    if (cpu->regA >= 0x80) {
-	cpu->statusNegative = true;
-    } else {
-	cpu->statusNegative = false;
-    }
+    updateZN(cpu, cpu->regA);
 
     cpu->instructionCycle--;
     prgCountInc(cpu, addressingMode);
@@ -455,16 +450,7 @@ adc:
     }
 
 
-    if (result == 0) {
-	cpu->statusZero = true;
-    } else {
-	cpu->statusZero = false;
-    }
-    if (result >= 0x80) {
-	cpu->statusNegative = true;
-    } else {
-	cpu->statusNegative = false;
-    }
+    updateZN(cpu, result);
 
     cpu->regA = result;
     cpu->instructionCycle--;
@@ -517,16 +503,7 @@ sbc:
 	cpu->statusOverflow = false;
     }
 
-    if (result == 0) {
-	cpu->statusZero = true;
-    } else {
-	cpu->statusZero = false;
-    }
-    if (result >= 0x80) {
-	cpu->statusNegative = true;
-    } else {
-	cpu->statusNegative = false;
-    }
+    updateZN(cpu, result);
 
     cpu->regA = result;
     cpu->instructionCycle--;
@@ -563,16 +540,7 @@ asl:
     cpu->statusCarry = value >> 7;
     result = value << 1;
     
-    if (result == 0) {
-	cpu->statusZero = true;
-    } else {
-	cpu->statusZero = false;
-    }
-    if (result >= 0x80) {
-	cpu->statusNegative = true;
-    } else {
-	cpu->statusNegative = false;
-    }
+    updateZN(cpu, result);
 
     if (addressingMode == ACCUMULATOR) {
 	cpu->regA = result;
@@ -595,31 +563,13 @@ slo:
     cpu->statusCarry = value >> 7;
     result = value << 1;
     
-    if (result == 0) {
-	cpu->statusZero = true;
-    } else {
-	cpu->statusZero = false;
-    }
-    if (result >= 0x80) {
-	cpu->statusNegative = true;
-    } else {
-	cpu->statusNegative = false;
-    }
+    updateZN(cpu, result);
 
     cpuWrite(getAddr(addressingMode, cpu, ram, rom), ram, result);
 
     cpu->regA = value;
 
-    if (cpu->regA == 0) {
-	cpu->statusZero = true;
-    } else {
-	cpu->statusNegative = false;
-    }
-    if (cpu->regA >= 0x80) {
-	cpu->statusNegative = true;
-    } else {
-	cpu->statusNegative = false;
-    }
+    updateZN(cpu, cpu->regA);
 
     cpu->instructionCycle--;
     prgCountInc(cpu, addressingMode);
@@ -645,16 +595,7 @@ rol:
 
     cpu->statusCarry = shouldCarry;
     
-    if (result == 0) {
-	cpu->statusZero = true;
-    } else {
-	cpu->statusZero = false;
-    }
-    if (result >= 0x80) {
-	cpu->statusNegative = true;
-    } else {
-	cpu->statusNegative = false;
-    }
+    updateZN(cpu, result);
 
     if (addressingMode == ACCUMULATOR) {
 	cpu->regA = result;
@@ -672,16 +613,7 @@ and:
     cpu->instructionCycle = 1;
     cpu->regA = cpu->regA & parseArgs(addressingMode, cpu, ram, rom);
 
-    if (cpu->regA == 0) {
-	cpu->statusZero = true;
-    } else {
-	cpu->statusZero = false;
-    }
-    if (cpu->regA >= 0x80) {
-	cpu->statusNegative = true;
-    } else {
-	cpu->statusNegative = false;
-    }
+    updateZN(cpu, cpu->regA);
 
     cpu->instructionCycle--;
     prgCountInc(cpu, addressingMode);
@@ -707,30 +639,12 @@ rla:
 
     cpu->statusCarry = shouldCarry;
     
-    if (result == 0) {
-	cpu->statusZero = true;
-    } else {
-	cpu->statusZero = false;
-    }
-    if (result >= 0x80) {
-	cpu->statusNegative = true;
-    } else {
-	cpu->statusNegative = false;
-    }
+    updateZN(cpu, result);
     cpuWrite(getAddr(addressingMode, cpu, ram, rom), ram, result);
 
     cpu->regA = cpu->regA & result;
 
-    if (cpu->regA == 0) {
-	cpu->statusZero = true;
-    } else {
-	cpu->statusNegative = false;
-    }
-    if (cpu->regA >= 0x80) {
-	cpu->statusNegative = true;
-    } else {
-	cpu->statusNegative = false;
-    }
+    updateZN(cpu, cpu->regA);
 
     
     cpu->instructionCycle--;
@@ -750,16 +664,7 @@ lsr:
     cpu->statusCarry = value & 1;
     result = value >> 1;
     
-    if (result == 0) {
-	cpu->statusZero = true;
-    } else {
-	cpu->statusZero = false;
-    }
-    if (result >= 0x80) {
-	cpu->statusNegative = true;
-    } else {
-	cpu->statusNegative = false;
-    }
+    updateZN(cpu, result);
 
     if (addressingMode == ACCUMULATOR) {
 	cpu->regA = result;
@@ -781,31 +686,13 @@ sre:
     cpu->statusCarry = value & 1;
     result = value >> 1;
     
-    if (result == 0) {
-	cpu->statusZero = true;
-    } else {
-	cpu->statusZero = false;
-    }
-    if (result >= 0x80) {
-	cpu->statusNegative = true;
-    } else {
-	cpu->statusNegative = false;
-    }
+    updateZN(cpu, result);
 
     cpuWrite(getAddr(addressingMode, cpu, ram, rom), ram, result);
 
     cpu->regA = cpu->regA ^ result;
 
-    if (cpu->regA == 0) {
-	cpu->statusZero = true;
-    } else {
-	cpu->statusNegative = false;
-    }
-    if (cpu->regA >= 0x80) {
-	cpu->statusNegative = true;
-    } else {
-	cpu->statusNegative = false;
-    }
+    updateZN(cpu, cpu->regA);
     
     cpu->instructionCycle--;
     prgCountInc(cpu, addressingMode);
@@ -828,16 +715,7 @@ ror:
 
     cpu->statusCarry = shouldCarry;
     
-    if (result == 0) {
-	cpu->statusZero = true;
-    } else {
-	cpu->statusZero = false;
-    }
-    if (result >= 0x80) {
-	cpu->statusNegative = true;
-    } else {
-	cpu->statusNegative = false;
-    }
+    updateZN(cpu, result);
 
     if (addressingMode == ACCUMULATOR) {
 	cpu->regA = result;
@@ -867,16 +745,7 @@ rra:
 
     cpu->statusCarry = shouldCarry;
     
-    if (result == 0) {
-	cpu->statusZero = true;
-    } else {
-	cpu->statusZero = false;
-    }
-    if (result >= 0x80) {
-	cpu->statusNegative = true;
-    } else {
-	cpu->statusNegative = false;
-    }
+    updateZN(cpu, result);
 
     if (addressingMode == ACCUMULATOR) {
 	cpu->regA = result;
@@ -942,16 +811,7 @@ dec:
     
     result = value - 1;
     
-    if (result == 0) {
-	cpu->statusZero = true;
-    } else {
-	cpu->statusZero = false;
-    }
-    if (result >= 0x80) {
-	cpu->statusNegative = true;
-    } else {
-	cpu->statusNegative = false;
-    }
+    updateZN(cpu, result);
 
     cpuWrite(getAddr(addressingMode, cpu, ram, rom), ram, result);
     
@@ -966,16 +826,7 @@ dcp:
 
     result = value - 1;
     
-    if (result == 0) {
-	cpu->statusZero = true;
-    } else {
-	cpu->statusZero = false;
-    }
-    if (result >= 0x80) {
-	cpu->statusNegative = true;
-    } else {
-	cpu->statusNegative = false;
-    }
+    updateZN(cpu, result);
 
     cpuWrite(getAddr(addressingMode, cpu, ram, rom), ram, result);
 
@@ -990,16 +841,7 @@ inc:
     
     result = value - 1;
     
-    if (result == 0) {
-	cpu->statusZero = true;
-    } else {
-	cpu->statusZero = false;
-    }
-    if (result >= 0x80) {
-	cpu->statusNegative = true;
-    } else {
-	cpu->statusNegative = false;
-    }
+    updateZN(cpu, result);
 
     if (addressingMode == ACCUMULATOR) {
 	cpu->regA = result;
@@ -1021,16 +863,7 @@ isc:
     
     result = value - 1;
     
-    if (result == 0) {
-	cpu->statusZero = true;
-    } else {
-	cpu->statusZero = false;
-    }
-    if (result >= 0x80) {
-	cpu->statusNegative = true;
-    } else {
-	cpu->statusNegative = false;
-    }
+    updateZN(cpu, result);
 
     if (addressingMode == ACCUMULATOR) {
 	cpu->regA = result;
@@ -1160,16 +993,7 @@ dey:
     
     result = value - 1;
     
-    if (result == 0) {
-	cpu->statusZero = true;
-    } else {
-	cpu->statusZero = false;
-    }
-    if (result >= 0x80) {
-	cpu->statusNegative = true;
-    } else {
-	cpu->statusNegative = false;
-    }
+    updateZN(cpu, result);
 
     cpu->regY = result;
     
@@ -1193,16 +1017,7 @@ iny:
     
     result = value + 1;
     
-    if (result == 0) {
-	cpu->statusZero = true;
-    } else {
-	cpu->statusZero = false;
-    }
-    if (result >= 0x80) {
-	cpu->statusNegative = true;
-    } else {
-	cpu->statusNegative = false;
-    }
+    updateZN(cpu, result);
 
     cpu->regY = result;
     
@@ -1217,16 +1032,7 @@ inx:
     
     result = value + 1;
     
-    if (result == 0) {
-	cpu->statusZero = true;
-    } else {
-	cpu->statusZero = false;
-    }
-    if (result >= 0x80) {
-	cpu->statusNegative = true;
-    } else {
-	cpu->statusNegative = false;
-    }
+    updateZN(cpu, result);
 
     cpu->regX = result;
     
@@ -1241,16 +1047,7 @@ anc:
 
     cpu->statusCarry = cpu->regA >> 7;
 
-    if (cpu->regA == 0) {
-	cpu->statusZero = true;
-    } else {
-	cpu->statusNegative = false;
-    }
-    if (cpu->regA >= 0x80) {
-	cpu->statusNegative = true;
-    } else {
-	cpu->statusNegative = false;
-    }
+    updateZN(cpu, cpu->regA);
 
     cpu->instructionCycle--;
     prgCountInc(cpu, addressingMode);
@@ -1265,16 +1062,7 @@ alr:
     cpu->statusCarry = value & 1;
     result = value >> 1;
     
-    if (result == 0) {
-	cpu->statusZero = true;
-    } else {
-	cpu->statusZero = false;
-    }
-    if (result >= 0x80) {
-	cpu->statusNegative = true;
-    } else {
-	cpu->statusNegative = false;
-    }
+    updateZN(cpu, result);
 
     cpu->regA = result;
     
@@ -1294,16 +1082,7 @@ arr:
 
     cpu->statusCarry = shouldCarry;
     
-    if (result == 0) {
-	cpu->statusZero = true;
-    } else {
-	cpu->statusZero = false;
-    }
-    if (result >= 0x80) {
-	cpu->statusNegative = true;
-    } else {
-	cpu->statusNegative = false;
-    }
+    updateZN(cpu, result);
 
     cpu->regA = result;
     
@@ -1317,16 +1096,7 @@ xaa:
     
     cpu->regA = cpu->regA & cpu->regX & parseArgs(IMMEDIATE, cpu, ram, rom);
 
-    if (result == 0) {
-	cpu->statusZero = true;
-    } else {
-	cpu->statusZero = false;
-    }
-    if (result >= 0x80) {
-	cpu->statusNegative = true;
-    } else {
-	cpu->statusNegative = false;
-    }
+    updateZN(cpu, result);
 
     cpu->instructionCycle--;
     prgCountInc(cpu, addressingMode);
@@ -1340,16 +1110,7 @@ axs:
 
     cpu->statusCarry = cpu->regA >> 7;
 
-    if (cpu->regA == 0) {
-	cpu->statusZero = true;
-    } else {
-	cpu->statusNegative = false;
-    }
-    if (cpu->regA >= 0x80) {
-	cpu->statusNegative = true;
-    } else {
-	cpu->statusNegative = false;
-    }
+    updateZN(cpu, cpu->regA);
     
     cpu->instructionCycle--;
     prgCountInc(cpu, addressingMode);
