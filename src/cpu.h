@@ -39,6 +39,7 @@ enum Instruction {
     PLA,
     DEY,
     TAY,
+    TAX,
     INY,
     INX,
     ANC,
