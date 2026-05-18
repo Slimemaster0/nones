@@ -38,7 +38,9 @@ void branch(struct CPU *cpu, const unsigned char *ram, const char *rom) {
     cpu->programCounter++;
 
     short delta = parseArgs(IMMEDIATE, cpu, ram, rom);
-    delta = (delta & 0x7f) | ((delta & 0x80) << 8);
+    if (delta > 0x80) {
+	delta = 0 - ( delta & 0x7f );
+    }
 
     short pcOld = cpu->programCounter;
 
