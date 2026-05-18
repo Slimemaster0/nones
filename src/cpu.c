@@ -298,24 +298,54 @@ void cpuTick(struct CPU *cpu, unsigned char *ram, const char *rom) {
     enum AddressingMode addressingMode = 0;
     if (cpu->instructionCycle == 0) {
 	unsigned char opCode = cpuRead(cpu->programCounter, ram, rom);
-	cpu->programCounter++;
 
-
-	unsigned char lowerByte = opCode & 0x1f;
-	if (lowerByte == 0x00) {
-	    if (opCode == 0x20) {
-		addressingMode = ABSOLUTE;
-	    } else if (opCode < 0x80) {
-		addressingMode = IMMEDIATE;
+	unsigned char lowerNybble = opCode & 0x1f;
+	if (lowerNybble < 0x4) {
+	    if (opCode %2 == 1) {
+		addressingMode = INDIRECTREGX;
 	    } else {
-		addressingMode = NONE;
+		if (opCode < 0x80) {
+		    addressingMode = NONE;
+		} else {
+		    addressingMode = IMMEDIATE;
+		}
 	    }
-	} else if (lowerByte == 0x04) {
+	} else if (lowerNybble < 0x8) {
 	    addressingMode = ZEROPAGE;
-	} else if (lowerByte == 0x08) {
-	    addressingMode = NONE;
-	} else if (lowerByte == 0x0c) {
-	
+	} else if (lowerNybble < 0x0b) {
+	    if (opCode %2 == 0) {
+		addressingMode = NONE;
+	    } else {
+		addressingMode = IMMEDIATE;
+	    }
+	} else if (lowerNybble > 0x10) {
+	    if (opCode == 0x6c) {
+		addressingMode = INDIRECT;
+	    } else {
+		addressingMode = ABSOLUTE;
+	    }
+	} else if (lowerNybble == 0x10) {
+	    addressingMode = IMMEDIATE;
+	} else if (lowerNybble < 0x14) {
+	    addressingMode = INDIRECTREGY;
+	} else if (lowerNybble < 0x17) {
+	    if (lowerNybble >= 0x16 && opCode >= 0x96 && opCode <= 0xb7) {
+		addressingMode = ZEROPAGEREGY;
+	    } else {
+		addressingMode = ZEROPAGEREGX;
+	    }
+	} else if (lowerNybble < 0x1c) {
+	    if (opCode %2 == 0) {
+		addressingMode = NONE;
+	    } else {
+		addressingMode = ABSOLUTEREGY;
+	    }
+	} else {
+	    if (lowerNybble > 0x1d && opCode >= 0x9e && opCode <= 0xbf) {
+		addressingMode = ABSOLUTEREGY;
+	    } else {
+		addressingMode = ABSOLUTEREGX;
+	    }
 	}
     }
 
